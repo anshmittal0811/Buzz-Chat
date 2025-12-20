@@ -1,83 +1,96 @@
-import { RefObject } from "react";
-
-export interface IUser {
-    _id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    profileUrl: string | null;
+// User types
+export interface User {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  profileUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface IAttachment {
-    url: string;
-    type: string;
-    name: string;
-    size?: number;
+// Auth types
+export interface LoginCredentials {
+  email: string;
+  password: string;
 }
 
-export interface IMessage {
-    _id: string;
-    attachment?: IAttachment | null;
-    content?: string | null;
-    sender: IUser;
-    createdAt: string;
-    updatedAt: string;
+export interface RegisterCredentials {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
 }
 
-export interface IIncomingMessage {
-    groupId: string;
-    senderId: string;
-    attachment?: IAttachment;
-    content?: string;
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
 }
 
-export interface IGroupCreatedPayload {
-    groupId: string;
-    name: string;
-    createdBy: string;
-    members: IUser[];
-    imageUrl?: string;
-    timestamp: string;
+// AuthResponse - API returns user fields directly with tokens
+export interface AuthResponse {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  profileUrl?: string;
+  __v?: number;
+  accessToken: string;
+  refreshToken: string;
 }
 
-export interface IUseChatSocketProps {
-    activeGroup: IGroup | null;
-    lastMessage: IMessage | null;
-    setGroupMessages: React.Dispatch<
-        React.SetStateAction<Record<string, IMessage[]>>
-    >;
-    groupMembers: Record<string, IUser[]>;
-    userMapRef: RefObject<Record<string, IUser>>;
-    onGroupCreated?: (group: IGroup, members: IUser[]) => void;
+// Group types
+export interface Group {
+  _id: string;
+  name?: string;
+  imageUrl?: string;
+  members: User[]; // API returns User objects directly
+  lastMessage?: Message;
+  lastMessages?: Message[];
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface IChatThread {
-    _id: string;
-    name: string;
-    lastMessage: IMessage;
-    updatedAt: string;
-    lastSeenAt?: string;
+// GroupMember is used when the API returns detailed membership info
+export interface GroupMember {
+  _id: string;
+  group: string;
+  user: User;
+  role: 'admin' | 'member';
+  joinedAt: string;
+  lastSeenAt?: string;
 }
 
-export interface IChatThreadItemProps {
-    group: IGroup;
-    newMessage: boolean;
+// Message types
+export interface Attachment {
+  filename: string;
+  url: string;
+  type: string;
+  size: number;
 }
 
-export interface IChatUserProps {
-    profileUrl: string;
-    isGroup: boolean;
-    name: string;
-    lastMessage: string | null;
-    lastSeen: string | null;
-    date: string | null;
-    newMessage?: boolean;
+export interface Message {
+  _id: string;
+  content?: string;
+  sender: User;
+  group: string;
+  attachment?: Attachment;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface IGroup {
-    _id: string;
-    name: string | null;
-    createdAt: string;
-    updatedAt: string;
-    imageUrl?: string;
+// API Response types
+export interface ApiResponse<T> {
+  statusCode: number;
+  message: string;
+  data: T;
 }
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+

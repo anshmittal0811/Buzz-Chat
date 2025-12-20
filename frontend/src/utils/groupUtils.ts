@@ -1,80 +1,70 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { IGroup, IUser } from '@/types';
-import { GROUP_CONSTANTS } from '@/constants/group';
+import type { Group, Message } from '@/types';
 
 /**
- * Validates group form data
+ * Get display name for a group
+ * For direct messages, shows the other user's name
  */
-export const validateGroupForm = (groupName: string, selectedUsers: string[]) => {
-  const errors: { groupName?: string; selectedUsers?: string } = {};
+export const getGroupDisplayName = (group: Group, currentUserId: string): string => {
+  if (group.name) return group.name;
 
-  if (!groupName.trim()) {
-    errors.groupName = GROUP_CONSTANTS.VALIDATION.GROUP_NAME_REQUIRED;
+  // API returns members as User[] directly
+  const members = group.members || [];
+  const otherUser = members.find((user) => user?._id && user._id !== currentUserId);
+
+  if (otherUser) {
+    return `${otherUser.firstName || ''} ${otherUser.lastName || ''}`.trim() || 'User';
   }
 
-  if (selectedUsers.length === 0) {
-    errors.selectedUsers = GROUP_CONSTANTS.VALIDATION.USERS_REQUIRED;
+  return 'Conversation';
+};
+
+/**
+ * Get avatar props for a group
+ */
+export const getGroupAvatar = (
+  group: Group,
+  currentUserId: string
+): { src?: string; name: string } => {
+  if (group.imageUrl) {
+    return { src: group.imageUrl, name: group.name || 'Group' };
   }
 
-  return {
-    isValid: Object.keys(errors).length === 0,
-    errors,
-  };
+  if (group.name) {
+    return { name: group.name };
+  }
+
+  // API returns members as User[] directly
+  const members = group.members || [];
+  const otherUser = members.find((user) => user?._id && user._id !== currentUserId);
+
+  if (otherUser) {
+    return {
+      src: otherUser.profileUrl,
+      name: `${otherUser.firstName || ''} ${otherUser.lastName || ''}`.trim() || 'User',
+    };
+  }
+
+  return { name: 'Conversation' };
 };
 
 /**
- * Creates a group object from API response
+ * Get the latest message from a group (from lastMessages array or lastMessage)
  */
-export const createGroupFromResponse = (
-  groupId: string,
-  groupName: string
-): IGroup => ({
-  _id: groupId,
-  name: groupName,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-});
-
-/**
- * Filters users based on search criteria
- */
-export const filterUsers = (users: IUser[], searchTerm: string): IUser[] => {
-  if (!searchTerm.trim()) return users;
-
-  const lowercaseSearch = searchTerm.toLowerCase();
-  return users.filter(
-    (user) =>
-      user.firstName.toLowerCase().includes(lowercaseSearch) ||
-      user.lastName.toLowerCase().includes(lowercaseSearch) ||
-      user.email.toLowerCase().includes(lowercaseSearch)
-  );
+export const getLatestMessage = (group: Group): Message | undefined => {
+  if (group.lastMessages && group.lastMessages.length > 0) {
+    return group.lastMessages[0];
+  }
+  return group.lastMessage;
 };
 
 /**
- * Formats user display name
+ * Get timestamp for sorting groups by latest activity
  */
-export const formatUserDisplayName = (user: IUser): string => {
-  return `${user.firstName} ${user.lastName}`;
+export const getGroupSortTime = (group: Group): number => {
+  const lastMessage = getLatestMessage(group);
+  if (lastMessage?.createdAt) {
+    return new Date(lastMessage.createdAt).getTime();
+  }
+  return new Date(group.updatedAt || group.createdAt).getTime();
 };
 
-/**
- * Checks if the current viewport is desktop
- */
-export const isDesktopViewport = (): boolean => {
-  return window.innerWidth >= GROUP_CONSTANTS.UI.DESKTOP_BREAKPOINT;
-};
-
-/**
- * Debounces a function call
- */
-export const debounce = <T extends (...args: any[]) => void>(
-  func: T,
-  wait: number
-): ((...args: Parameters<T>) => void) => {
-  let timeout: NodeJS.Timeout;
-  
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}; 

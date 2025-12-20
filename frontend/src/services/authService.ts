@@ -1,9 +1,14 @@
-import api from "@/lib/api";
+import api from '@/lib/api';
+import type { ApiResponse, AuthResponse, LoginCredentials, RegisterCredentials } from '@/types';
 
 export const authService = {
-    login: (email: string, password: string) =>
-        api.post('/auth/login', { email, password }),
-    register: (firstName: string, lastName: string, email: string, password: string) =>
-        api.post('/auth/register', { firstName, lastName, email, password }),
-    refreshToken: (refreshToken: string) => api.post('/auth/refresh', { refreshToken: refreshToken })
+  login: (credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> =>
+    api.post('/auth/login', credentials),
+
+  register: (credentials: RegisterCredentials): Promise<ApiResponse<AuthResponse>> =>
+    api.post('/auth/register', credentials),
+
+  refreshToken: (refreshToken: string): Promise<ApiResponse<{ accessToken: string; refreshToken: string }>> =>
+    api.post('/auth/refresh', { refreshToken }),
 };
+

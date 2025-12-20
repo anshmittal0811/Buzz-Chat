@@ -1,121 +1,61 @@
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { CHAT_CONSTANTS } from "@/constants/chat";
-import { IGroup, IUser } from "@/types";
-import { formatLastSeen } from "@/utils";
-import Settings from "@/components/Settings";
-import User from "./User";
+import { useState } from 'react';
+import { Settings, Users } from 'lucide-react';
+import { useChat } from '@/contexts/ChatContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { Avatar } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
+import { GroupSettingsModal } from './GroupSettingsModal';
+import { getGroupDisplayName, getGroupAvatar } from '@/utils/groupUtils';
 
-interface ChatHeaderProps {
-  sidebarOpen: boolean;
-  activeGroup: IGroup | null;
-  currentUser: IUser | null;
-  groupMembers: Record<string, IUser[]>;
-  memberStatus: string | null;
-  openGroupSettings: boolean;
-  setOpenGroupSettings: (open: boolean) => void;
-}
+export const ChatHeader = () => {
+  const { selectedGroup } = useChat();
+  const { user } = useAuth();
+  const [showSettings, setShowSettings] = useState(false);
 
-const ChatHeader = ({
-  sidebarOpen,
-  activeGroup,
-  currentUser,
-  groupMembers,
-  memberStatus,
-  openGroupSettings,
-  setOpenGroupSettings,
-}: ChatHeaderProps) => {
-  const isMobile = useIsMobile();
-  const shouldShowSidebarTrigger = !(sidebarOpen && !isMobile);
+  if (!selectedGroup) return null;
 
-  const getActiveGroupMember = () => {
-    if (!activeGroup || !groupMembers[activeGroup._id]) return undefined;
-    return groupMembers[activeGroup._id].find(
-      (member) => member._id !== currentUser?._id
-    );
-  };
-
-  const getActiveGroupName = () => {
-    if (!activeGroup) return CHAT_CONSTANTS.LABELS.NONE;
-    
-    if (activeGroup.name) {
-      return activeGroup.name;
-    }
-    
-    const member = getActiveGroupMember();
-    return member ? `${member.firstName} ${member.lastName}` : CHAT_CONSTANTS.LABELS.NONE;
-  };
-
-  const getActiveGroupImageUrl = () => {
-    if (!activeGroup) return "";
-    
-    if (activeGroup.name) {
-      return activeGroup.imageUrl ?? "";
-    }
-    
-    const member = getActiveGroupMember();
-    return member?.profileUrl ?? "";
-  };
-
-  const getActiveGroupLastSeen = () => {
-    if (!activeGroup || activeGroup.name || !memberStatus) return null;
-    
-    if (memberStatus === CHAT_CONSTANTS.LABELS.ONLINE) {
-      return memberStatus;
-    }
-    
-    return `${CHAT_CONSTANTS.LABELS.LAST_SEEN} ${formatLastSeen(
-      new Date(memberStatus).toISOString()
-    )}`;
-  };
-
-  const getSettingsDetails = () => {
-    if (!activeGroup) return undefined;
-    
-    if (activeGroup.name) {
-      return activeGroup;
-    }
-    
-    return getActiveGroupMember();
-  };
-
-  const getSettingsMembers = () => {
-    if (!activeGroup || !activeGroup.name) return undefined;
-    return groupMembers[activeGroup._id] || [];
-  };
+  const displayName = getGroupDisplayName(selectedGroup, user?._id || '');
+  const avatarProps = getGroupAvatar(selectedGroup, user?._id || '');
+  const isGroupChat = !!selectedGroup.name || (selectedGroup.members?.length || 0) > 2;
+  const memberCount = selectedGroup.members?.length || 0;
 
   return (
-    <header className={`flex shrink-0 items-center gap-2 bg-secondary px-4 h-16`}>
-      {shouldShowSidebarTrigger && (
-        <div className="flex flex-row justify-center items-center gap-3">
-          <SidebarTrigger className="-ml-1 text-white" />
+    <>
+      <div className="h-16 px-4 border-b border-stone bg-cream flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Avatar {...avatarProps} size="md" />
+          <div>
+            <h2 className="font-medium text-charcoal">{displayName}</h2>
+            <p className="text-xs text-graphite">
+              {isGroupChat ? (
+                <span className="flex items-center gap-1">
+                  <Users className="w-3 h-3" />
+                  {memberCount} members
+                </span>
+              ) : (
+                'Online'
+              )}
+            </p>
+          </div>
         </div>
-      )}
-      
-      {activeGroup && (
-        <Settings
-          open={openGroupSettings}
-          setOpen={setOpenGroupSettings}
-          imageUrl={getActiveGroupImageUrl()}
-          isGroup={!!activeGroup.name}
-          details={getSettingsDetails()}
-          members={getSettingsMembers()}
-          trigger={
-            <button>
-              <User
-                profileUrl={getActiveGroupImageUrl()}
-                isGroup={!!activeGroup.name}
-                name={getActiveGroupName()}
-                lastMessage={null}
-                lastSeen={getActiveGroupLastSeen()}
-                date={null}
-              />
-            </button>
-          }
+
+        <div className="flex items-center gap-1">
+          {isGroupChat && (
+            <Button variant="ghost" size="sm" onClick={() => setShowSettings(true)}>
+              <Settings className="w-5 h-5" />
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {isGroupChat && (
+        <GroupSettingsModal
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+          group={selectedGroup}
         />
       )}
-    </header>
+    </>
   );
 };
 
-export default ChatHeader; 

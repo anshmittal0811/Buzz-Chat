@@ -1,8 +1,14 @@
-import api from "@/lib/api";
+import api from '@/lib/api';
+import type { ApiResponse, PaginatedResponse, User } from '@/types';
 
 export const userService = {
-    fetchUsers: (search: string, page: number, limit: number) =>
-        api.get(`/users?${search?.length > 0 ? `search=${search}` : ''}&page=${page}&limit=${limit}`),
-    fetchUserDetails: (userId: string) => api.get(`/users/${userId}`),
-    updateProfileUrl: (profileUrl: string) => api.patch('/profile/image', { profileUrl })
+  getUsers: (params?: { page?: number; limit?: number; search?: string }): Promise<ApiResponse<PaginatedResponse<User>>> =>
+    api.get('/users', { params }),
+
+  getUser: (userId: string): Promise<ApiResponse<User>> => 
+    api.get(`/users/${userId}`),
+
+  updateProfileImage: (profileUrl: string): Promise<ApiResponse<User>> =>
+    api.patch('/users/profile/image', { profileUrl }),
 };
+

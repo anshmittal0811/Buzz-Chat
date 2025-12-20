@@ -23,14 +23,24 @@ export class GroupService {
         const groupId = new Types.ObjectId(message.groupId);
         const members = await this.groupMemberModel
             .find({ group: groupId })
-            .populate('user', '_id')
+            .populate('user', '_id firstName lastName email profileUrl')
             .exec();
+
+        console.log(`[GROUP-SERVICE] Broadcasting message to ${members.length} members for group ${message.groupId}`);
 
         for (const member of members) {
             if (member.user && member.user._id.toString() !== message.senderId) {
+                const receiverId = member.user._id.toString(); // Ensure it's a string
+                console.log(`[GROUP-SERVICE] Sending to receiverId: ${receiverId}`);
                 this.kafkaService.produce('group.member.sent', {
-                    receiverId: member.user._id,
-                    message,
+                    receiverId,
+                    message: {
+                        ...message,
+                        sender: {
+                            _id: message.senderId,
+                            // Sender info will be populated on fetch
+                        },
+                    },
                 });
             }
         }

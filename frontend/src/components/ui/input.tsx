@@ -1,22 +1,44 @@
-import * as React from "react"
+import { type InputHTMLAttributes, forwardRef } from 'react';
 
-import { cn } from "@/lib/utils"
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  error?: string;
+}
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ className = '', label, error, id, ...props }, ref) => {
     return (
-      <input
-        type={type}
-        className={cn(
-          "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-          className
+      <div className="w-full">
+        {label && (
+          <label
+            htmlFor={id}
+            className="block text-sm font-medium text-charcoal mb-1.5"
+          >
+            {label}
+          </label>
         )}
-        ref={ref}
-        {...props}
-      />
-    )
+        <input
+          ref={ref}
+          id={id}
+          className={`
+            w-full px-4 py-2.5 
+            bg-ivory border border-stone rounded-lg
+            text-ink placeholder:text-graphite
+            focus:outline-none focus:ring-2 focus:ring-navy-light focus:border-navy-light
+            transition-colors duration-200
+            disabled:bg-cream disabled:cursor-not-allowed
+            ${error ? 'border-burgundy focus:ring-burgundy' : ''}
+            ${className}
+          `}
+          {...props}
+        />
+        {error && (
+          <p className="mt-1.5 text-sm text-burgundy">{error}</p>
+        )}
+      </div>
+    );
   }
-)
-Input.displayName = "Input"
+);
 
-export { Input }
+Input.displayName = 'Input';
+
