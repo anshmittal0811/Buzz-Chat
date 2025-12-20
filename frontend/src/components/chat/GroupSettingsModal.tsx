@@ -110,7 +110,7 @@ export const GroupSettingsModal = ({ isOpen, onClose, group }: GroupSettingsModa
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isCompressing}
-                className="absolute bottom-0 right-0 w-8 h-8 bg-navy text-ivory rounded-full flex items-center justify-center shadow-md hover:bg-navy-deep transition-colors disabled:opacity-50"
+                className="absolute bottom-0 right-0 w-6 h-6 bg-navy text-ivory rounded-full flex items-center justify-center shadow-md hover:bg-navy-deep transition-colors disabled:opacity-50"
               >
                 <Camera className="w-4 h-4" />
               </button>

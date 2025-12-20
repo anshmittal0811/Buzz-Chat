@@ -35,13 +35,22 @@ export class PresenceService {
   async handleHeartbeat(payload: {
     userId: string;
     memberId?: string;
-  }): Promise<number> {
+  }): Promise<number | undefined> {
     const { userId, memberId } = payload;
     const now = Date.now();
 
+    console.log(`[Presence] Heartbeat from userId: ${userId}, requesting memberId: ${memberId}`);
+    
     await this.redis.set(`user:lastSeen:${userId}`, now);
-    const lastSeenStr = await this.redis.get(`user:lastSeen:${memberId}`);
-    const lastSeen = lastSeenStr ? parseInt(lastSeenStr) : undefined;
-    return lastSeen;
+    console.log(`[Presence] Updated lastSeen for ${userId} to ${now}`);
+    
+    if (memberId) {
+      const lastSeenStr = await this.redis.get(`user:lastSeen:${memberId}`);
+      console.log(`[Presence] Member ${memberId} lastSeen: ${lastSeenStr}`);
+      const lastSeen = lastSeenStr ? parseInt(lastSeenStr) : undefined;
+      return lastSeen;
+    }
+    
+    return undefined;
   }
 }

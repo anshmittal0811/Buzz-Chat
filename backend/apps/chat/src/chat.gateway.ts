@@ -88,12 +88,16 @@ export class ChatGateway
   async handleHeartbeat(socket: Socket, payload: string) {
     const message = JSON.parse(payload.toString());
     const userId = socket.data.userId;
+    console.log(`[ChatGateway] Heartbeat received from socket user: ${userId}, payload:`, message);
+    
     if (!userId || typeof userId !== 'string')
       throw new TypeError('Invalid User ID');
     const result = await this.presenceService.handleHeartbeat({
       userId,
       ...message,
     });
+    
+    console.log(`[ChatGateway] Emitting user.status:`, { userId: message.memberId, status: result });
     socket.emit('user.status', {
       userId: message.memberId,
       status: result,
