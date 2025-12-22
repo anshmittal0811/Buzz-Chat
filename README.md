@@ -116,7 +116,3 @@ CLOUDINARY_API_SECRET=your-secret
 npm run dev               # Development
 npm run build             # Production build
 ```
-
-## License
-
-MIT
